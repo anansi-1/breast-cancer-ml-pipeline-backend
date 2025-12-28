@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
+
 
 
 app = FastAPI(title="Breast Cancer Prediction API")
@@ -62,3 +64,14 @@ def predict(data: Features):
             status_code=500,
             detail=f"Error during prediction: {str(e)}"
         )
+
+
+app = FastAPI(title="Breast Cancer Prediction API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
