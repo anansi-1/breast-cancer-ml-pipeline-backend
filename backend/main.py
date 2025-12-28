@@ -4,10 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
 
-
-
 app = FastAPI(title="Breast Cancer Prediction API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 try:
     logistic_model = joblib.load("models/logistic_model.joblib")
@@ -18,19 +22,15 @@ except Exception as e:
     print("Error loading models:", e)
     raise RuntimeError("Models could not be loaded. Check paths and files.")
 
-
 class Features(BaseModel):
-    features: list[float]  
+    features: list[float]
 
 @app.get("/")
 def home():
     return {"message": "Breast Cancer Prediction API is running"}
 
-
-
 @app.post("/predict")
 def predict(data: Features):
-    # Check feature length
     if len(data.features) != 30:
         raise HTTPException(
             status_code=400,
@@ -39,14 +39,12 @@ def predict(data: Features):
 
     try:
         X = np.array(data.features, dtype=float).reshape(1, -1)
+        X_scaled = scaler.transform(X)
     except ValueError:
         raise HTTPException(
             status_code=400,
             detail="All features must be numeric values."
         )
-
-    try:
-        X_scaled = scaler.transform(X)
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -64,14 +62,3 @@ def predict(data: Features):
             status_code=500,
             detail=f"Error during prediction: {str(e)}"
         )
-
-
-app = FastAPI(title="Breast Cancer Prediction API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
